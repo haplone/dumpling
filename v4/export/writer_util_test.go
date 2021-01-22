@@ -62,9 +62,10 @@ func (s *testUtilSuite) TestWriteInsert(c *C) {
 	}
 	tableIR := newMockTableIR("test", "employee", data, specCmts, colTypes)
 	bf := storage.NewBufferWriter()
+	limiter := NewSpeedLimiter(1024 * 1024)
 
 	conf := configForWriteSQL(UnspecifiedSize, UnspecifiedSize)
-	err := WriteInsert(context.Background(), conf, tableIR, tableIR, bf)
+	err := WriteInsert(context.Background(), conf, tableIR, tableIR, bf, limiter)
 	c.Assert(err, IsNil)
 	expected := "/*!40101 SET NAMES binary*/;\n" +
 		"/*!40014 SET FOREIGN_KEY_CHECKS=0*/;\n" +
@@ -93,9 +94,10 @@ func (s *testUtilSuite) TestWriteInsertReturnsError(c *C) {
 	tableIR := newMockTableIR("test", "employee", data, specCmts, colTypes)
 	tableIR.rowErr = rowErr
 	bf := storage.NewBufferWriter()
+	limiter := NewSpeedLimiter(1024 * 1024)
 
 	conf := configForWriteSQL(UnspecifiedSize, UnspecifiedSize)
-	err := WriteInsert(context.Background(), conf, tableIR, tableIR, bf)
+	err := WriteInsert(context.Background(), conf, tableIR, tableIR, bf, limiter)
 	c.Assert(err, Equals, rowErr)
 	expected := "/*!40101 SET NAMES binary*/;\n" +
 		"/*!40014 SET FOREIGN_KEY_CHECKS=0*/;\n" +
@@ -116,11 +118,12 @@ func (s *testUtilSuite) TestWriteInsertInCsv(c *C) {
 	colTypes := []string{"INT", "SET", "VARCHAR", "VARCHAR", "TEXT"}
 	tableIR := newMockTableIR("test", "employee", data, nil, colTypes)
 	bf := storage.NewBufferWriter()
+	limiter := NewSpeedLimiter(1024 * 1024)
 
 	// test nullValue
 	opt := &csvOption{separator: []byte(","), delimiter: doubleQuotationMark, nullValue: "\\N"}
 	conf := configForWriteCSV(true, opt)
-	err := WriteInsertInCsv(context.Background(), conf, tableIR, tableIR, bf)
+	err := WriteInsertInCsv(context.Background(), conf, tableIR, tableIR, bf, limiter)
 	c.Assert(err, IsNil)
 	expected := "1,\"male\",\"bob@mail.com\",\"020-1234\",\\N\n" +
 		"2,\"female\",\"sarah@mail.com\",\"020-1253\",\"healthy\"\n" +
@@ -133,7 +136,7 @@ func (s *testUtilSuite) TestWriteInsertInCsv(c *C) {
 	opt.delimiter = quotationMark
 	tableIR = newMockTableIR("test", "employee", data, nil, colTypes)
 	conf = configForWriteCSV(true, opt)
-	err = WriteInsertInCsv(context.Background(), conf, tableIR, tableIR, bf)
+	err = WriteInsertInCsv(context.Background(), conf, tableIR, tableIR, bf, limiter)
 	c.Assert(err, IsNil)
 	expected = "1,'male','bob@mail.com','020-1234',\\N\n" +
 		"2,'female','sarah@mail.com','020-1253','healthy'\n" +
@@ -146,7 +149,7 @@ func (s *testUtilSuite) TestWriteInsertInCsv(c *C) {
 	opt.separator = []byte(";")
 	tableIR = newMockTableIR("test", "employee", data, nil, colTypes)
 	conf = configForWriteCSV(true, opt)
-	err = WriteInsertInCsv(context.Background(), conf, tableIR, tableIR, bf)
+	err = WriteInsertInCsv(context.Background(), conf, tableIR, tableIR, bf, limiter)
 	c.Assert(err, IsNil)
 	expected = "1;'male';'bob@mail.com';'020-1234';\\N\n" +
 		"2;'female';'sarah@mail.com';'020-1253';'healthy'\n" +
@@ -161,7 +164,7 @@ func (s *testUtilSuite) TestWriteInsertInCsv(c *C) {
 	tableIR = newMockTableIR("test", "employee", data, nil, colTypes)
 	tableIR.colNames = []string{"id", "gender", "email", "phone_number", "status"}
 	conf = configForWriteCSV(false, opt)
-	err = WriteInsertInCsv(context.Background(), conf, tableIR, tableIR, bf)
+	err = WriteInsertInCsv(context.Background(), conf, tableIR, tableIR, bf, limiter)
 	c.Assert(err, IsNil)
 	expected = "maidma&;,?magenderma&;,?maemamailma&;,?maphone_numberma&;,?mastatusma\n" +
 		"1&;,?mamamalema&;,?mabob@mamail.comma&;,?ma020-1234ma&;,?\\N\n" +
@@ -185,9 +188,10 @@ func (s *testUtilSuite) TestSQLDataTypes(c *C) {
 		colType := []string{sqlType}
 		tableIR := newMockTableIR("test", "t", tableData, nil, colType)
 		bf := storage.NewBufferWriter()
+		limiter := NewSpeedLimiter(1024 * 1024)
 
 		conf := configForWriteSQL(UnspecifiedSize, UnspecifiedSize)
-		err := WriteInsert(context.Background(), conf, tableIR, tableIR, bf)
+		err := WriteInsert(context.Background(), conf, tableIR, tableIR, bf, limiter)
 		c.Assert(err, IsNil)
 		lines := strings.Split(bf.String(), "\n")
 		c.Assert(len(lines), Equals, 3)

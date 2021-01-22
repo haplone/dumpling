@@ -33,10 +33,12 @@ type Writer struct {
 	rebuildConnFn       func(*sql.Conn) (*sql.Conn, error)
 	finishTaskCallBack  func(Task)
 	finishTableCallBack func(Task)
+
+	limiter *SpeedLimiter
 }
 
 // NewWriter returns a new Writer with given configurations
-func NewWriter(ctx context.Context, id int64, config *Config, conn *sql.Conn, externalStore storage.ExternalStorage) *Writer {
+func NewWriter(ctx context.Context, id int64, config *Config, conn *sql.Conn, externalStore storage.ExternalStorage, limiter *SpeedLimiter) *Writer {
 	sw := &Writer{
 		id:                  id,
 		ctx:                 ctx,
@@ -45,6 +47,7 @@ func NewWriter(ctx context.Context, id int64, config *Config, conn *sql.Conn, ex
 		extStorage:          externalStore,
 		finishTaskCallBack:  func(Task) {},
 		finishTableCallBack: func(Task) {},
+		limiter:             limiter,
 	}
 	switch strings.ToLower(config.FileType) {
 	case FileFormatSQLTextString:
@@ -200,7 +203,7 @@ func (w *Writer) tryToWriteTableData(ctx context.Context, meta TableMeta, ir Tab
 
 	for {
 		fileWriter, tearDown := buildInterceptFileWriter(w.extStorage, fileName, conf.CompressType)
-		err = format.WriteInsert(ctx, conf, meta, ir, fileWriter)
+		err = format.WriteInsert(ctx, conf, meta, ir, fileWriter, w.limiter)
 		tearDown(ctx)
 		if err != nil {
 			return err
