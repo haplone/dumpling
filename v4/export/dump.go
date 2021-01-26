@@ -245,6 +245,7 @@ func (d *Dumper) startWriters(ctx context.Context, wg *errgroup.Group, taskChan 
 		for _, w := range writers {
 			w.conn.Close()
 		}
+		// cancel speed limiter interval check
 	}
 	return writers, tearDown, nil
 }

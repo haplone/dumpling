@@ -23,6 +23,9 @@ Features
 - [x] Multiple output formats: SQL, CSV, ...
 - [ ] Write to cloud storage (S3, GCS) natively
 - [x] Advanced table filtering
+- [x] 历史数据dump限速，默认限速1M，具体使用、实现方式见[dump历史数据限速设计、实现](docs/cn/dump_speed_limit.md)
+
+
 
 Any questions? Let's discuss in [#sig-migrate in Slack](https://slack.tidb.io/invite?team=tidb-community&channel=sig-migrate&ref=github_sig)!
 

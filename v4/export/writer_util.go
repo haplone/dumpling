@@ -122,7 +122,7 @@ func (b *writerPipe) ShouldSwitchStatement() bool {
 		(b.statementSizeLimit != UnspecifiedSize && b.currentStatementSize >= b.statementSizeLimit)
 }
 
-// SpeedLimiter used for control speed of dump data
+// SpeedLimiter used for control speed of data dump
 type SpeedLimiter struct {
 	count  int
 	limit  uint64
