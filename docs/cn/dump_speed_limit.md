@@ -4,7 +4,7 @@
 
 ## dumpling架构
 
-![dumpling架构图](dumpling_arch.png)
+![dumpling架构图](./dumpling_arch.png)
 
 ### 数据一致性问题
 
